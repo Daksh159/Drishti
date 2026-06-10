@@ -1,6 +1,7 @@
 #include "analytics_engine.h"
 #include <numeric>
 #include <cmath>
+#include <stdexcept>
 
 std::vector<double> AnalyticsEngine::calculateSMA(const std::vector<double>& prices, int period) {
     std::vector<double> sma;
@@ -94,18 +95,38 @@ double AnalyticsEngine::calculateVolatility(const std::vector<double>& prices) {
 }
 
 double AnalyticsEngine::calculateSharpeRatio(const std::vector<double>& prices, double risk_free_rate, int periods_per_year) {
-    double volatility = calculateVolatility(prices);
-    if (volatility == 0.0 || prices.size() < 2) {
+    if (prices.size() < 2) {
         return 0.0;
     }
+    
+    // Calculate daily returns
     std::vector<double> returns;
     for (size_t i = 1; i < prices.size(); ++i) {
         returns.push_back((prices[i] - prices[i-1]) / prices[i-1]);
     }
-    double mean_return = std::accumulate(returns.begin(), returns.end(), 0.0) / returns.size();
-    double annual_return = (1.0 + mean_return) * periods_per_year - 1.0;
-    double annual_volatility = volatility * std::sqrt(periods_per_year);
-    return (annual_return - risk_free_rate) / annual_volatility;
+    
+    // Calculate mean daily return
+    double mean_daily_return = std::accumulate(returns.begin(), returns.end(), 0.0) / returns.size();
+    
+    // Calculate daily return volatility (standard deviation)
+    double sum_sq_diff = 0.0;
+    for (double r : returns) {
+        sum_sq_diff += (r - mean_daily_return) * (r - mean_daily_return);
+    }
+    double daily_volatility = std::sqrt(sum_sq_diff / returns.size());
+    
+    // Handle divide by zero or extremely small volatility
+    if (daily_volatility < 1e-9) {
+        return 0.0;
+    }
+    
+    // Annualize: (mean * 252 - risk_free_rate) / (vol * sqrt(252))
+    double annualized_return = mean_daily_return * periods_per_year;
+    double annualized_volatility = daily_volatility * std::sqrt(static_cast<double>(periods_per_year));
+    double daily_rf = risk_free_rate / periods_per_year;
+    double annualized_excess_return = (mean_daily_return - daily_rf) * periods_per_year;
+    
+    return annualized_excess_return / annualized_volatility;
 }
 
 double AnalyticsEngine::calculateMaxDrawdown(const std::vector<double>& prices) {
@@ -124,4 +145,75 @@ double AnalyticsEngine::calculateMaxDrawdown(const std::vector<double>& prices) 
         }
     }
     return max_drawdown;
+}
+
+RiskMetrics AnalyticsEngine::calculateRiskMetrics(const std::vector<double>& prices, double risk_free_rate, int periods_per_year) {
+    RiskMetrics metrics;
+    if (prices.size() < 2) {
+        metrics.volatility = 0.0;
+        metrics.annualized_volatility = 0.0;
+        metrics.sharpe_ratio = 0.0;
+        metrics.max_drawdown = 0.0;
+        metrics.total_return = 0.0;
+        metrics.annualized_return = 0.0;
+        metrics.cagr = 0.0;
+        return metrics;
+    }
+
+    // Calculate daily returns
+    std::vector<double> returns;
+    for (size_t i = 1; i < prices.size(); ++i) {
+        returns.push_back((prices[i] - prices[i-1]) / prices[i-1]);
+    }
+
+    // Calculate volatility
+    double mean_return = std::accumulate(returns.begin(), returns.end(), 0.0) / returns.size();
+    double sum_sq_diff = 0.0;
+    for (double r : returns) {
+        sum_sq_diff += (r - mean_return) * (r - mean_return);
+    }
+    double daily_vol = std::sqrt(sum_sq_diff / returns.size());
+
+    // Calculate risk metrics
+    metrics.volatility = daily_vol;
+    metrics.annualized_volatility = daily_vol * std::sqrt(static_cast<double>(periods_per_year));
+    metrics.max_drawdown = calculateMaxDrawdown(prices);
+    metrics.total_return = (prices.back() - prices.front()) / prices.front();
+
+    // Annualized return (simple)
+    double num_years = static_cast<double>(prices.size()) / periods_per_year;
+    metrics.annualized_return = metrics.total_return / num_years;
+
+    // CAGR (Compound Annual Growth Rate)
+    if (prices.front() > 0.0 && num_years > 0.0) {
+        metrics.cagr = std::pow(prices.back() / prices.front(), 1.0 / num_years) - 1.0;
+    } else {
+        metrics.cagr = 0.0;
+    }
+
+    // Sharpe ratio (using daily mean return)
+    if (daily_vol > 1e-9) {
+        double daily_rf = risk_free_rate / periods_per_year;
+        double annualized_excess_return = (mean_return - daily_rf) * periods_per_year;
+        metrics.sharpe_ratio = annualized_excess_return / metrics.annualized_volatility;
+    } else {
+        metrics.sharpe_ratio = 0.0;
+    }
+
+    return metrics;
+}
+
+std::vector<double> AnalyticsEngine::calculateVolumeSMA(const std::vector<long long>& volumes, int period) {
+    std::vector<double> sma;
+    if (period <= 0 || volumes.size() < static_cast<size_t>(period)) {
+        return sma;
+    }
+    for (size_t i = period - 1; i < volumes.size(); ++i) {
+        double sum = 0.0;
+        for (size_t j = i - period + 1; j <= i; ++j) {
+            sum += static_cast<double>(volumes[j]);
+        }
+        sma.push_back(sum / period);
+    }
+    return sma;
 }

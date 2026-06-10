@@ -10,6 +10,16 @@ struct MACDResult {
     std::vector<double> histogram;
 };
 
+struct RiskMetrics {
+    double volatility;           // Daily volatility
+    double annualized_volatility;
+    double sharpe_ratio;
+    double max_drawdown;
+    double total_return;         // Total % return over period
+    double annualized_return;
+    double cagr;                 // Compound Annual Growth Rate
+};
+
 class AnalyticsEngine {
 public:
     static std::vector<double> calculateSMA(const std::vector<double>& prices, int period);
@@ -19,6 +29,8 @@ public:
     static double calculateVolatility(const std::vector<double>& prices);
     static double calculateSharpeRatio(const std::vector<double>& prices, double risk_free_rate = 0.02, int periods_per_year = 252);
     static double calculateMaxDrawdown(const std::vector<double>& prices);
+    static RiskMetrics calculateRiskMetrics(const std::vector<double>& prices, double risk_free_rate = 0.02, int periods_per_year = 252);
+    static std::vector<double> calculateVolumeSMA(const std::vector<long long>& volumes, int period);
 };
 
 #endif
