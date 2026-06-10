@@ -1,0 +1,14 @@
+# Drishti Python Dependencies
+
+# Data Collection
+yfinance>=0.2.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Dashboard & Visualization
+streamlit>=1.28.0
+plotly>=5.18.0
+
+# AI/Sentiment Analysis
+torch>=2.0.0
+transformers>=4.35.0

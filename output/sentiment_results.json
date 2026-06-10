@@ -1,0 +1,27 @@
+[
+    {
+        "text": "Apple reports record quarterly revenue, beats earnings estimates",
+        "label": "bullish",
+        "score": 0.7283979654312134
+    },
+    {
+        "text": "Reliance Industries announces major expansion into renewable energy",
+        "label": "bullish",
+        "score": 0.7891601920127869
+    },
+    {
+        "text": "NIFTY 50 drops 2% due to global market sell-off",
+        "label": "bearish",
+        "score": -0.962616503238678
+    },
+    {
+        "text": "Inflation data comes in higher than expected, causing market uncertainty",
+        "label": "bearish",
+        "score": -0.9561940431594849
+    },
+    {
+        "text": "Tech stocks rally as AI investments drive future growth expectations",
+        "label": "bearish",
+        "score": -0.8321348428726196
+    }
+]
