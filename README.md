@@ -80,6 +80,14 @@ Beautiful, interactive web dashboard showing:
 - Real-time analysis with one click
 
 ---
+## OUTPUT
+
+<img width="1217" height="813" alt="image" src="https://github.com/user-attachments/assets/f86c0263-0098-4c04-be30-3fc9deecd093" />
+
+<img width="1365" height="824" alt="image" src="https://github.com/user-attachments/assets/4699cda0-0ff0-4854-99b9-f24b881c5d7c" />
+
+
+---
 
 ## 🏗️ Technical Architecture
 
